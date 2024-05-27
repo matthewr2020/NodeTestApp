@@ -2,8 +2,18 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const authMiddleware = require('../middleware/authMiddleware');
 
 const router = express.Router();
+
+router.get('/user', authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.user).select('-password');
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // Register route
 router.post('/register', async (req, res) => {

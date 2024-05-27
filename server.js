@@ -4,37 +4,39 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 
-// Load environment variables from .env file
 dotenv.config();
 
 const app = express();
 
-// Middleware
+const authMiddleware = require('./middleware/authMiddleware');
+const adminMiddleware = require('./middleware/adminMiddleware');
+
 app.use(morgan('dev'));
 app.use(cors());
 app.use(express.json());
 
-const authRoutes = require('./routes/auth');
-app.use('/api/auth', authRoutes);
-
-const profileRoutes = require('./routes/profile');
-app.use('/api/profile', profileRoutes);
-
-// Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
 })
 .then(() => console.log('MongoDB connected'))
-.catch(err => console.error(`MongoDB connection error: ${err}`));
+.catch(err => console.error('MongoDB connection error:', err));
 
-// Basic route
 app.get('/', (req, res) => {
   res.send('Hello World!');
 });
 
-// Start the server
-const PORT = process.env.PORT || 3000;
+// Import routes
+const authRoutes = require('./routes/auth');
+const profileRoutes = require('./routes/profile');
+const adminRoutes = require('./routes/admin');
+
+// Use routes
+app.use('/api/auth', authMiddleware, authRoutes);
+app.use('/api/profile', authMiddleware, profileRoutes);
+app.use('/api/admin', authMiddleware, adminMiddleware, adminRoutes);
+
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
